@@ -1,34 +1,32 @@
 package entity
 
 import (
+	"errors"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
 type Job struct {
-	ID               string    `valid:"uuid"`
-	OutputBucketPath string    `valid:"notnull"`
-	Status           string    `valid:"notnull"`
-	Video            *Video    `valid:"-"`
-	Error            string    `valid:"-"`
-	CreatedAt        time.Time `valid:"-"`
-	UpdatedAt        time.Time `valid:"-"`
-}
-
-func init() {
-	govalidator.SetFieldsRequiredByDefault(true)
+	ID               string
+	OutputBucketPath string
+	Status           string
+	Video            *Video
+	VideoID          string
+	Error            string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 func NewJob(output string, status string, video *Video) (*Job, error) {
 	job := Job{
+		ID:               uuid.NewString(),
 		OutputBucketPath: output,
 		Status:           status,
 		Video:            video,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
-
-	job.prepare()
 
 	err := job.Validate()
 
@@ -39,17 +37,19 @@ func NewJob(output string, status string, video *Video) (*Job, error) {
 	return &job, nil
 }
 
-func (job *Job) prepare() {
-	job.ID = uuid.NewString()
-	job.CreatedAt = time.Now()
-	job.UpdatedAt = time.Now()
-}
-
 func (job *Job) Validate() error {
-	_, err := govalidator.ValidateStruct(job)
-
+	if job.ID == "" {
+		return errors.New("invalid id")
+	}
+	err := uuid.Validate(job.ID)
 	if err != nil {
-		return err
+		return errors.New("invalid uuid format")
+	}
+	if job.OutputBucketPath == "" {
+		return errors.New("invalid output bucket path")
+	}
+	if job.Status == "" {
+		return errors.New("invalid status")
 	}
 
 	return nil

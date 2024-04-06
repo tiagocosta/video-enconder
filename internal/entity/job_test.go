@@ -2,7 +2,6 @@ package entity_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -10,10 +9,7 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	video := entity.NewVideo()
-	video.ID = uuid.NewString()
-	video.FilePath = "path"
-	video.CreatedAt = time.Now()
+	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "path")
 
 	job, err := entity.NewJob("path", "Converted", video)
 

@@ -2,7 +2,6 @@ package entity_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -10,17 +9,11 @@ import (
 )
 
 func TestValidateIfVideoIsEmpty(t *testing.T) {
-	video := entity.NewVideo()
-	err := video.Validate()
+	_, err := entity.NewVideo("", "", "")
 	assert.NotNil(t, err)
 }
 
 func TestValidateIfVideoIdIsNotUuid(t *testing.T) {
-	video := entity.NewVideo()
-	video.ID = uuid.NewString()
-	video.ResourceID = "resourceid"
-	video.FilePath = "path"
-	video.CreatedAt = time.Now()
-	err := video.Validate()
+	_, err := entity.NewVideo(uuid.NewString(), "resourceid", "path")
 	assert.Nil(t, err)
 }

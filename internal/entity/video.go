@@ -1,30 +1,44 @@
 package entity
 
 import (
+	"errors"
 	"time"
-
-	"github.com/asaskevich/govalidator"
 )
 
 type Video struct {
-	ID         string    `valid:"uuid"`
-	ResourceID string    `valid:"notnull"`
-	FilePath   string    `valid:"notnull"`
-	CreatedAt  time.Time `valid:"-"`
+	ID         string
+	ResourceID string
+	FilePath   string
+	CreatedAt  time.Time
+	Jobs       []*Job
 }
 
-func init() {
-	govalidator.SetFieldsRequiredByDefault(true)
-}
+func NewVideo(id string, resourceID string, filePath string) (*Video, error) {
+	video := &Video{
+		ID:         id,
+		ResourceID: resourceID,
+		FilePath:   filePath,
+		CreatedAt:  time.Now(),
+	}
 
-func NewVideo() *Video {
-	return &Video{}
+	err := video.Validate()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return video, nil
 }
 
 func (video *Video) Validate() error {
-	_, err := govalidator.ValidateStruct(video)
-	if err != nil {
-		return err
+	if video.ID == "" {
+		return errors.New("invalid id")
+	}
+	if video.ResourceID == "" {
+		return errors.New("invalid resource_id")
+	}
+	if video.FilePath == "" {
+		return errors.New("invalid file path")
 	}
 
 	return nil
