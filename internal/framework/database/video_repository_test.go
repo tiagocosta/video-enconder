@@ -1,7 +1,11 @@
 package database_test
 
 import (
+	"database/sql"
+	"testing"
+
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 	"github.com/tiagocosta/video-enconder/internal/entity"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 
@@ -9,20 +13,44 @@ import (
 )
 
 type VideoRepositoryTestSuite struct {
-	RepositoryTestSuite
-	// suite.Suite
-	// DB *sql.DB
+	suite.Suite
+	DB *sql.DB
 }
 
-// func (suite *VideoRepositoryTestSuite) SetupSuite() {
-// 	db, err := sql.Open("sqlite3", ":memory:")
-// 	suite.NoError(err)
-// 	db.Exec("CREATE TABLE video (id varchar(255) NOT NULL, resource_id varchar(255) NOT NULL, file_path varchar(255) NOT NULL, created_at datetime NOT NULL, PRIMARY KEY (id))")
-// 	suite.DB = db
-// }
+func (suite *VideoRepositoryTestSuite) SetupSuite() {
+	db, err := sql.Open("sqlite3", ":memory:")
+	suite.NoError(err)
+	db.Exec(
+		`CREATE TABLE video (
+				id varchar(255) NOT NULL,
+				resource_id varchar(255) NOT NULL,
+				file_path varchar(255) NOT NULL,
+				created_at datetime NOT NULL,
+				PRIMARY KEY (id)
+				)`)
+	db.Exec(
+		`CREATE TABLE job (
+					id varchar(255) NOT NULL,
+					output_bucket_path varchar(255) NOT NULL,
+					status varchar(255) NOT NULL,
+					video_id varchar(255) NOT NULL,
+					created_at datetime NOT NULL,
+					updated_at datetime,
+					PRIMARY KEY (id)
+			)`)
+	suite.DB = db
+}
 
-// func (suite *VideoRepositoryTestSuite) TearDownSuite() {
-// 	suite.DB.Close()
+func (suite *VideoRepositoryTestSuite) TearDownSuite() {
+	suite.DB.Close()
+}
+
+func TestVideoRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(VideoRepositoryTestSuite))
+}
+
+// func TestSuite(t *testing.T) {
+// 	suite.Run(t, new(VideoRepositoryTestSuite))
 // }
 
 func (suite *VideoRepositoryTestSuite) TestGivenAnVideo_WhenSave_ThenShouldSaveVideo() {
