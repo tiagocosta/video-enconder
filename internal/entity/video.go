@@ -3,6 +3,8 @@ package entity
 import (
 	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Video struct {
@@ -33,6 +35,10 @@ func NewVideo(id string, resourceID string, filePath string) (*Video, error) {
 func (video *Video) Validate() error {
 	if video.ID == "" {
 		return errors.New("invalid id")
+	}
+	err := uuid.Validate(video.ID)
+	if err != nil {
+		return errors.New("invalid uuid format")
 	}
 	if video.ResourceID == "" {
 		return errors.New("invalid resource_id")
