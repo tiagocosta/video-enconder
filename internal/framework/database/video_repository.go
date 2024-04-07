@@ -33,6 +33,12 @@ func (r *VideoRepository) Find(id string) (*entity.Video, error) {
 	if err != nil {
 		return nil, err
 	}
+	jobRepo := NewJobRepository(r.DB)
+	jobs, err := jobRepo.List(&video)
+	if err != nil {
+		return nil, err
+	}
+	video.Jobs = jobs
 
 	return &video, nil
 }

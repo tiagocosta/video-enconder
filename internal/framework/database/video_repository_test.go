@@ -1,11 +1,7 @@
 package database_test
 
 import (
-	"database/sql"
-	"testing"
-
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/suite"
 	"github.com/tiagocosta/video-enconder/internal/entity"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 
@@ -13,24 +9,21 @@ import (
 )
 
 type VideoRepositoryTestSuite struct {
-	suite.Suite
-	DB *sql.DB
+	RepositoryTestSuite
+	// suite.Suite
+	// DB *sql.DB
 }
 
-func (suite *VideoRepositoryTestSuite) SetupSuite() {
-	db, err := sql.Open("sqlite3", ":memory:")
-	suite.NoError(err)
-	db.Exec("CREATE TABLE video (id varchar(255) NOT NULL, resource_id varchar(255) NOT NULL, file_path varchar(255) NOT NULL, created_at datetime NOT NULL, PRIMARY KEY (id))")
-	suite.DB = db
-}
+// func (suite *VideoRepositoryTestSuite) SetupSuite() {
+// 	db, err := sql.Open("sqlite3", ":memory:")
+// 	suite.NoError(err)
+// 	db.Exec("CREATE TABLE video (id varchar(255) NOT NULL, resource_id varchar(255) NOT NULL, file_path varchar(255) NOT NULL, created_at datetime NOT NULL, PRIMARY KEY (id))")
+// 	suite.DB = db
+// }
 
-func (suite *VideoRepositoryTestSuite) TearDownSuite() {
-	suite.DB.Close()
-}
-
-func TestSuite(t *testing.T) {
-	suite.Run(t, new(VideoRepositoryTestSuite))
-}
+// func (suite *VideoRepositoryTestSuite) TearDownSuite() {
+// 	suite.DB.Close()
+// }
 
 func (suite *VideoRepositoryTestSuite) TestGivenAnVideo_WhenSave_ThenShouldSaveVideo() {
 	video, err := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")

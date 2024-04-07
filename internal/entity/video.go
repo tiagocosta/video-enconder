@@ -12,7 +12,7 @@ type Video struct {
 	ResourceID string
 	FilePath   string
 	CreatedAt  time.Time
-	Jobs       []*Job
+	Jobs       []Job
 }
 
 func NewVideo(id string, resourceID string, filePath string) (*Video, error) {
