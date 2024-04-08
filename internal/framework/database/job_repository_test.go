@@ -68,38 +68,84 @@ func (suite *JobRepositoryTestSuite) TestGivenAnJob_WhenSave_ThenShouldSaveJob()
 	suite.Equal(job.ID, jobResult.ID)
 	suite.Equal(job.OutputBucketPath, jobResult.OutputBucketPath)
 	suite.Equal(job.Status, jobResult.Status)
+	suite.Equal(job.VideoID, jobResult.VideoID)
 	suite.Equal(job.CreatedAt.UnixMilli(), jobResult.CreatedAt.UnixMilli())
 	suite.Equal(job.UpdatedAt.UnixMilli(), jobResult.UpdatedAt.UnixMilli())
 }
 
-// func (suite *JobRepositoryTestSuite) TestGivenValidId_WhenFind_ThenShouldRetrieveTheJob() {
-// 	repo := database.NewVideoRepository(suite.DB)
+func (suite *JobRepositoryTestSuite) TestGivenValidId_WhenFind_ThenShouldRetrieveTheJobAndAssociatedVideo() {
+	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")
+	videoRepo := database.NewVideoRepository(suite.DB)
+	videoRepo.Save(video)
 
-// 	id := uuid.NewString()
+	job, _ := entity.NewJob("output_path", "Pending", video)
+	jobRepo := database.NewJobRepository(suite.DB)
+	jobRepo.Save(job)
 
-// 	video, _ := entity.NewVideo(id, "resource_id", "file_path")
-// 	repo.Save(video)
+	jobResult, err := jobRepo.Find(job.ID)
 
-// 	videoResult, err := repo.Find(id)
+	suite.NoError(err)
+	suite.Equal(job.ID, jobResult.ID)
+	suite.Equal(job.OutputBucketPath, jobResult.OutputBucketPath)
+	suite.Equal(job.Status, jobResult.Status)
+	suite.Equal(job.VideoID, jobResult.VideoID)
+	suite.Equal(job.VideoID, jobResult.Video.ID)
+	suite.Equal(job.CreatedAt.UnixMilli(), jobResult.CreatedAt.UnixMilli())
+	suite.Equal(job.UpdatedAt.UnixMilli(), jobResult.UpdatedAt.UnixMilli())
+}
 
-// 	suite.NoError(err)
+func (suite *JobRepositoryTestSuite) TestGivenInvalidId_WhenFind_ThenShouldNotRetrieveAnyJob() {
+	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")
+	videoRepo := database.NewVideoRepository(suite.DB)
+	videoRepo.Save(video)
 
-// 	suite.Equal(video.ID, videoResult.ID)
-// 	suite.Equal(video.ResourceID, videoResult.ResourceID)
-// 	suite.Equal(video.FilePath, videoResult.FilePath)
-// 	suite.Equal(video.CreatedAt.UnixMilli(), videoResult.CreatedAt.UnixMilli())
-// }
+	job, _ := entity.NewJob("output_path", "Pending", video)
+	jobRepo := database.NewJobRepository(suite.DB)
+	jobRepo.Save(job)
 
-// func (suite *VideoRepositoryTestSuite) TestGivenInValidId_WhenFind_ThenShouldNotRetrieveAnyJob() {
-// 	repo := database.NewVideoRepository(suite.DB)
+	jobResult, err := jobRepo.Find("123")
+	suite.Error(err)
+	suite.Nil(jobResult)
+}
 
-// 	id := uuid.NewString()
+func (suite *JobRepositoryTestSuite) TestGivenValidVideoId_WhenList_ThenShouldRetrieveAllJobsAssociatedToThatVideo() {
+	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")
+	videoRepo := database.NewVideoRepository(suite.DB)
+	videoRepo.Save(video)
 
-// 	video, _ := entity.NewVideo(id, "resource_id", "file_path")
-// 	repo.Save(video)
+	job1, _ := entity.NewJob("output_path", "Pending", video)
+	job2, _ := entity.NewJob("output_path", "Pending", video)
+	job3, _ := entity.NewJob("output_path", "Pending", video)
+	jobRepo := database.NewJobRepository(suite.DB)
+	jobRepo.Save(job1)
+	jobRepo.Save(job2)
+	jobRepo.Save(job3)
 
-// 	videoResult, err := repo.Find("123")
+	jobsResult, err := jobRepo.List(video)
+	suite.NoError(err)
+	suite.Len(jobsResult, 3)
 
-// 	suite.Error(err)
-// 	suite.Nil(videoResult)
-// }
+	suite.Equal(job1.ID, jobsResult[0].ID)
+	suite.Equal(job1.OutputBucketPath, jobsResult[0].OutputBucketPath)
+	suite.Equal(job1.Status, jobsResult[0].Status)
+	suite.Equal(job1.VideoID, jobsResult[0].VideoID)
+	suite.Equal(job1.VideoID, jobsResult[0].Video.ID)
+	suite.Equal(job1.CreatedAt.UnixMilli(), jobsResult[0].CreatedAt.UnixMilli())
+	suite.Equal(job1.UpdatedAt.UnixMilli(), jobsResult[0].UpdatedAt.UnixMilli())
+
+	suite.Equal(job2.ID, jobsResult[1].ID)
+	suite.Equal(job2.OutputBucketPath, jobsResult[1].OutputBucketPath)
+	suite.Equal(job2.Status, jobsResult[1].Status)
+	suite.Equal(job2.VideoID, jobsResult[1].VideoID)
+	suite.Equal(job2.VideoID, jobsResult[1].Video.ID)
+	suite.Equal(job2.CreatedAt.UnixMilli(), jobsResult[1].CreatedAt.UnixMilli())
+	suite.Equal(job2.UpdatedAt.UnixMilli(), jobsResult[1].UpdatedAt.UnixMilli())
+
+	suite.Equal(job3.ID, jobsResult[2].ID)
+	suite.Equal(job3.OutputBucketPath, jobsResult[2].OutputBucketPath)
+	suite.Equal(job3.Status, jobsResult[2].Status)
+	suite.Equal(job3.VideoID, jobsResult[2].VideoID)
+	suite.Equal(job3.VideoID, jobsResult[2].Video.ID)
+	suite.Equal(job3.CreatedAt.UnixMilli(), jobsResult[2].CreatedAt.UnixMilli())
+	suite.Equal(job3.UpdatedAt.UnixMilli(), jobsResult[2].UpdatedAt.UnixMilli())
+}
