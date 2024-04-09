@@ -14,12 +14,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type FragmentVideoTestSuite struct {
+type EncodeVideoTestSuite struct {
 	suite.Suite
 	DB *sql.DB
 }
 
-func (suite *FragmentVideoTestSuite) SetupSuite() {
+func (suite *EncodeVideoTestSuite) SetupSuite() {
 	db, err := sql.Open("sqlite3", ":memory:")
 	suite.NoError(err)
 	db.Exec(
@@ -47,15 +47,15 @@ func (suite *FragmentVideoTestSuite) SetupSuite() {
 	}
 }
 
-func TestFragmentVideoTestSuite(t *testing.T) {
-	suite.Run(t, new(FragmentVideoTestSuite))
+func TestEncodeVideoTestSuite(t *testing.T) {
+	suite.Run(t, new(EncodeVideoTestSuite))
 }
 
-func (suite *FragmentVideoTestSuite) TearDownSuite() {
+func (suite *EncodeVideoTestSuite) TearDownSuite() {
 	suite.DB.Close()
 }
 
-func (suite *FragmentVideoTestSuite) TestVideoFragment() {
+func (suite *EncodeVideoTestSuite) TestVideoEncode() {
 	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "example.mp4")
 
 	useCaseDownloadVideo := usecase.NewDownloadVideoUseCase()
@@ -70,7 +70,13 @@ func (suite *FragmentVideoTestSuite) TestVideoFragment() {
 	inputFragmentVideo := usecase.FragmentVideoInputDTO{
 		VideoID: video.ID,
 	}
-	err := useCaseFragmentVideo.Execute(inputFragmentVideo)
+	useCaseFragmentVideo.Execute(inputFragmentVideo)
+
+	useCaseEncodeVideo := usecase.NewEncodeVideoUseCase()
+	inputEncodeVideo := usecase.EncodeVideoInputDTO{
+		VideoID: video.ID,
+	}
+	err := useCaseEncodeVideo.Execute(inputEncodeVideo)
 	suite.NoError(err)
 
 	useCaseCleanVideo := usecase.NewCleanVideoUseCase()

@@ -9,7 +9,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"github.com/tiagocosta/video-enconder/internal/entity"
-	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/usecase"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -58,9 +57,8 @@ func (suite *DownloadVideoTestSuite) TearDownSuite() {
 
 func (suite *DownloadVideoTestSuite) TestVideoDownload() {
 	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "example.mp4")
-	videoRepo := database.NewVideoRepository(suite.DB)
 
-	useCase := usecase.NewDownloadVideoUseCase(videoRepo)
+	useCase := usecase.NewDownloadVideoUseCase()
 	input := usecase.DownloadVideoInputDTO{
 		BucketName: "encoder_example_test",
 		FilePath:   video.FilePath,
@@ -69,4 +67,10 @@ func (suite *DownloadVideoTestSuite) TestVideoDownload() {
 
 	err := useCase.Execute(input)
 	suite.NoError(err)
+
+	useCaseCleanVideo := usecase.NewCleanVideoUseCase()
+	inputCleanVideo := usecase.CleanVideoInputDTO{
+		VideoID: video.ID,
+	}
+	useCaseCleanVideo.Execute(inputCleanVideo)
 }

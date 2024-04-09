@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"cloud.google.com/go/storage"
-
-	"github.com/tiagocosta/video-enconder/internal/entity"
 )
 
 type DownloadVideoInputDTO struct {
@@ -18,13 +16,10 @@ type DownloadVideoInputDTO struct {
 }
 
 type DownloadVideoUseCase struct {
-	VideoRepository entity.VideoRepositoryInterface
 }
 
-func NewDownloadVideoUseCase(videoRepository entity.VideoRepositoryInterface) *DownloadVideoUseCase {
-	return &DownloadVideoUseCase{
-		VideoRepository: videoRepository,
-	}
+func NewDownloadVideoUseCase() *DownloadVideoUseCase {
+	return &DownloadVideoUseCase{}
 }
 
 func (c *DownloadVideoUseCase) Execute(input DownloadVideoInputDTO) error {
