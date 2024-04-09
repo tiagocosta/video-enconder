@@ -1,4 +1,4 @@
-FROM golang:1.22.2-alpine3.19 AS stage
+FROM golang:1.22.2-alpine3.18 AS stage
 
 ENV BENTO4_VERSION=1.6.0-637
 ENV BENTO4_INSTALL_DIR=/opt/bento4
