@@ -7,10 +7,23 @@ import (
 	"github.com/google/uuid"
 )
 
+type Status string
+
+const (
+	Pending     Status = "PENDING"
+	Downloading Status = "DOWNLOADING"
+	Fragmenting Status = "FRAGMENTING"
+	Encoding    Status = "ENCODING"
+	Uploading   Status = "UPLOADING"
+	Finishing   Status = "FINISHING"
+	Completed   Status = "COMPLETED"
+	Failed      Status = "FAILED"
+)
+
 type Job struct {
 	ID               string
 	OutputBucketPath string
-	Status           string
+	Status           Status
 	Video            *Video
 	VideoID          string
 	Error            string
@@ -18,7 +31,7 @@ type Job struct {
 	UpdatedAt        time.Time
 }
 
-func NewJob(output string, status string, video *Video) (*Job, error) {
+func NewJob(output string, status Status, video *Video) (*Job, error) {
 	job := Job{
 		ID:               uuid.NewString(),
 		OutputBucketPath: output,
@@ -57,4 +70,32 @@ func (job *Job) Validate() error {
 	}
 
 	return nil
+}
+
+func (job *Job) StartVideoDownload() {
+	job.Status = Downloading
+}
+
+func (job *Job) StartVideoFragmentation() {
+	job.Status = Fragmenting
+}
+
+func (job *Job) StartVideoEncoding() {
+	job.Status = Encoding
+}
+
+func (job *Job) StartVideoUpload() {
+	job.Status = Uploading
+}
+
+func (job *Job) CleanupVideoFiles() {
+	job.Status = Finishing
+}
+
+func (job *Job) Complete() {
+	job.Status = Completed
+}
+
+func (job *Job) Fail() {
+	job.Status = Failed
 }
