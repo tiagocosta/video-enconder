@@ -77,7 +77,6 @@ func (uc *UploadVideoUseCase) loadPaths(videoPath string) error {
 	var paths []string
 	err := filepath.Walk(videoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Println(err, "AAAAAAAAAAAAAAAAAAAAA")
 			return nil
 		}
 

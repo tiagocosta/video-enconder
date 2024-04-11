@@ -49,7 +49,7 @@ func (suite *JobRepositoryTestSuite) TearDownSuite() {
 	suite.DB.Close()
 }
 
-func (suite *JobRepositoryTestSuite) TestGivenAnJob_WhenSave_ThenShouldSaveJob() {
+func (suite *JobRepositoryTestSuite) TestGivenAJob_WhenSave_ThenShouldSaveJob() {
 	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")
 	videoRepo := database.NewVideoRepository(suite.DB)
 	videoRepo.Save(video)
@@ -71,6 +71,30 @@ func (suite *JobRepositoryTestSuite) TestGivenAnJob_WhenSave_ThenShouldSaveJob()
 	suite.Equal(job.VideoID, jobResult.VideoID)
 	suite.Equal(job.CreatedAt.UnixMilli(), jobResult.CreatedAt.UnixMilli())
 	suite.Equal(job.UpdatedAt.UnixMilli(), jobResult.UpdatedAt.UnixMilli())
+}
+
+func (suite *JobRepositoryTestSuite) TestGivenAJob_WhenUpdate_ThenShouldUpdateJob() {
+	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "file_path")
+	videoRepo := database.NewVideoRepository(suite.DB)
+	videoRepo.Save(video)
+
+	job, _ := entity.NewJob("output_path", entity.Pending, video)
+	jobRepo := database.NewJobRepository(suite.DB)
+	jobRepo.Save(job)
+
+	var jobToUpdate entity.Job
+	suite.DB.QueryRow("SELECT id, output_bucket_path, status, video_id, created_at, updated_at FROM job WHERE id = ?", job.ID).
+		Scan(&jobToUpdate.ID, &jobToUpdate.OutputBucketPath, &jobToUpdate.Status, &jobToUpdate.VideoID, &jobToUpdate.CreatedAt, &jobToUpdate.UpdatedAt)
+
+	jobToUpdate.Complete()
+	err := jobRepo.Update(&jobToUpdate)
+
+	suite.NoError(err)
+	suite.Equal(entity.Completed, jobToUpdate.Status)
+	suite.Equal(job.ID, jobToUpdate.ID)
+	suite.Equal(job.OutputBucketPath, jobToUpdate.OutputBucketPath)
+	suite.NotEqual(job.Status, jobToUpdate.Status)
+	suite.Equal(job.VideoID, jobToUpdate.VideoID)
 }
 
 func (suite *JobRepositoryTestSuite) TestGivenValidId_WhenFind_ThenShouldRetrieveTheJobAndAssociatedVideo() {
@@ -113,9 +137,9 @@ func (suite *JobRepositoryTestSuite) TestGivenValidVideoId_WhenList_ThenShouldRe
 	videoRepo := database.NewVideoRepository(suite.DB)
 	videoRepo.Save(video)
 
-	job1, _ := entity.NewJob("output_path", "Pending", video)
-	job2, _ := entity.NewJob("output_path", "Pending", video)
-	job3, _ := entity.NewJob("output_path", "Pending", video)
+	job1, _ := entity.NewJob("output_path", entity.Pending, video)
+	job2, _ := entity.NewJob("output_path", entity.Pending, video)
+	job3, _ := entity.NewJob("output_path", entity.Pending, video)
 	jobRepo := database.NewJobRepository(suite.DB)
 	jobRepo.Save(job1)
 	jobRepo.Save(job2)

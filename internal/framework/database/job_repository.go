@@ -45,7 +45,7 @@ func (r *JobRepository) Find(id string) (*entity.Job, error) {
 }
 
 func (r *JobRepository) Update(job *entity.Job) error {
-	stmt, err := r.DB.Prepare("UPDATE job SET output_bucket_path = ?, status = ?, video_id = ?, updated_at = ? WHERE id = ?)")
+	stmt, err := r.DB.Prepare("UPDATE job SET output_bucket_path = ?, status = ?, video_id = ?, updated_at = ? WHERE id = ?")
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (r *JobRepository) List(video *entity.Video) ([]entity.Job, error) {
 		jobs = append(jobs, entity.Job{
 			ID:               id,
 			OutputBucketPath: output_bucket_path,
-			Status:           status,
+			Status:           entity.Status(status),
 			VideoID:          video_id,
 			Video:            video,
 			CreatedAt:        created_at,
