@@ -11,6 +11,7 @@ type Status string
 
 const (
 	Pending     Status = "PENDING"
+	Starting    Status = "STARTING"
 	Downloading Status = "DOWNLOADING"
 	Fragmenting Status = "FRAGMENTING"
 	Encoding    Status = "ENCODING"
@@ -31,10 +32,10 @@ type Job struct {
 	UpdatedAt        time.Time
 }
 
-func NewJob(output string, status Status, video *Video) (*Job, error) {
+func NewJob(outputBucket string, status Status, video *Video) (*Job, error) {
 	job := Job{
 		ID:               uuid.NewString(),
-		OutputBucketPath: output,
+		OutputBucketPath: outputBucket,
 		Status:           status,
 		Video:            video,
 		VideoID:          video.ID,

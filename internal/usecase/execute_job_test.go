@@ -9,7 +9,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"github.com/tiagocosta/video-enconder/internal/entity"
+	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
+	"github.com/tiagocosta/video-enconder/internal/framework/events"
 	"github.com/tiagocosta/video-enconder/internal/usecase"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,7 +19,8 @@ import (
 
 type ExecuteJobTestSuite struct {
 	suite.Suite
-	DB *sql.DB
+	DB              *sql.DB
+	EventDispatcher *events.EventDispatcher
 }
 
 func (suite *ExecuteJobTestSuite) SetupSuite() {
@@ -42,6 +45,7 @@ func (suite *ExecuteJobTestSuite) SetupSuite() {
 				PRIMARY KEY (id)
 		)`)
 	suite.DB = db
+	suite.EventDispatcher = events.NewEventDispatcher()
 	err = godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -65,7 +69,7 @@ func (suite *ExecuteJobTestSuite) TestExecuteJob() {
 	jobRepository := database.NewJobRepository(suite.DB)
 	jobRepository.Save(job)
 
-	useCaseExecuteJob := usecase.NewExecuteJobUseCase(job, jobRepository)
+	useCaseExecuteJob := usecase.NewExecuteJobUseCase(job, videoRepository, jobRepository, event.NewJobCompleted(), suite.EventDispatcher)
 	inputExecuteJobDTO := usecase.ExecuteJobInputDTO{
 		BucketName: job.OutputBucketPath,
 		FilePath:   video.FilePath,

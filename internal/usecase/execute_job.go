@@ -2,11 +2,14 @@ package usecase
 
 import (
 	"errors"
+	"log"
 	"os"
 	"strconv"
 
 	"github.com/tiagocosta/video-enconder/internal/entity"
+	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
+	"github.com/tiagocosta/video-enconder/internal/framework/events"
 )
 
 type ExecuteJobInputDTO struct {
@@ -16,18 +19,40 @@ type ExecuteJobInputDTO struct {
 }
 
 type ExecuteJobUseCase struct {
-	Job           *entity.Job
-	JobRepository *database.JobRepository
+	Job             *entity.Job
+	VideoRepository *database.VideoRepository
+	JobRepository   *database.JobRepository
+	JobCompleted    *event.JobCompleted
+	EventDispatcher *events.EventDispatcher
 }
 
-func NewExecuteJobUseCase(job *entity.Job, jobRepository *database.JobRepository) *ExecuteJobUseCase {
+func NewExecuteJobUseCase(
+	job *entity.Job,
+	videoRepository *database.VideoRepository,
+	jobRepository *database.JobRepository,
+	jobCompleted *event.JobCompleted,
+	eventDispatcher *events.EventDispatcher,
+) *ExecuteJobUseCase {
 	return &ExecuteJobUseCase{
-		Job:           job,
-		JobRepository: jobRepository,
+		Job:             job,
+		VideoRepository: videoRepository,
+		JobRepository:   jobRepository,
+		JobCompleted:    jobCompleted,
+		EventDispatcher: eventDispatcher,
 	}
 }
 
 func (uc *ExecuteJobUseCase) Execute(input ExecuteJobInputDTO) error {
+	concurrency, _ := strconv.Atoi(os.Getenv("CONCURRENCY_WORKERS"))
+	for workerId := 0; workerId < concurrency; workerId++ {
+		go uc.worker(workerId, input)
+	}
+
+	return nil
+}
+
+func (uc *ExecuteJobUseCase) worker(workerId int, input ExecuteJobInputDTO) error {
+	log.Printf("Worker %v working", workerId)
 	err := uc.download(input)
 	if err != nil {
 		return err
