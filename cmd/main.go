@@ -1,37 +1,45 @@
 package main
 
 import (
-	"sync"
+	"database/sql"
 
 	"github.com/streadway/amqp"
+	"github.com/tiagocosta/video-enconder/configs"
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/event/handler"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
 	"github.com/tiagocosta/video-enconder/internal/framework/rabbitmq"
-	"go.uber.org/zap"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	eventDispatcher events.EventDispatcher
+	eventDispatcher *events.EventDispatcher
+	db              *sql.DB
 )
 
 func main() {
-	// Create a logger
-	logger, _ := zap.NewProduction()
+	// // Create a logger
+	// logger, _ := zap.NewProduction()
 
-	// Log messages
-	logger.Info("This is an info message", zap.String("key", "value"))
+	// // Log messages
+	// logger.Info("This is an info message", zap.String("key", "value"))
+
+	configs.LoadConfig(".")
+
+	db = database.SqlDB()
+	defer db.Close()
 
 	rabbitMQChannel := rabbitmq.OpenRabbitMQChannel()
 	defer rabbitMQChannel.Close()
 
-	eventDispatcher := events.NewEventDispatcher()
+	eventDispatcher = events.NewEventDispatcher()
 	eventDispatcher.Register("JobCompleted", &handler.JobCompletedHandler{
 		RabbitMQChannel: rabbitMQChannel,
 	})
 
-	go consumeQueue(rabbitMQChannel)
+	consumeQueue(rabbitMQChannel)
 }
 
 func consumeQueue(rabbitMQChannel *amqp.Channel) {
@@ -43,11 +51,11 @@ func consumeQueue(rabbitMQChannel *amqp.Channel) {
 		evt := event.NewVideoRequested()
 		evt.SetPayload(msg.Body)
 		handler := handler.NewVideoRequestedHandler(
-			&eventDispatcher,
-			database.NewVideoRepository(nil),
-			database.NewJobRepository(nil),
+			eventDispatcher,
+			database.NewVideoRepository(db),
+			database.NewJobRepository(db),
 		)
-		handler.Handle(evt, &sync.WaitGroup{})
+		handler.Handle(evt)
 		msg.Ack(false)
 	}
 }

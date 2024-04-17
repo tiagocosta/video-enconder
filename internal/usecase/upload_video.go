@@ -97,16 +97,16 @@ func (uc *UploadVideoUseCase) loadPaths(videoPath string) error {
 	return nil
 }
 
-func newUploadClient() (*storage.Client, context.Context, error) {
-	ctx := context.Background()
+// func newUploadClient() (*storage.Client, context.Context, error) {
+// 	ctx := context.Background()
 
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
+// 	client, err := storage.NewClient(ctx)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
 
-	return client, ctx, nil
-}
+// 	return client, ctx, nil
+// }
 
 func (uc *UploadVideoUseCase) uploadWorker(in chan int, out chan string, input UploadVideoInputDTO) {
 

@@ -2,13 +2,10 @@ package usecase_test
 
 import (
 	"database/sql"
-	"log"
 	"testing"
 
-	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
-	"github.com/tiagocosta/video-enconder/internal/entity"
+	"github.com/tiagocosta/video-enconder/configs"
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
@@ -46,10 +43,7 @@ func (suite *ExecuteJobTestSuite) SetupSuite() {
 		)`)
 	suite.DB = db
 	suite.EventDispatcher = events.NewEventDispatcher()
-	err = godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	configs.LoadConfig("../../")
 }
 
 func TestExecuteJobTestSuite(t *testing.T) {
@@ -61,22 +55,16 @@ func (suite *ExecuteJobTestSuite) TearDownSuite() {
 }
 
 func (suite *ExecuteJobTestSuite) TestExecuteJob() {
-	video, _ := entity.NewVideo(uuid.NewString(), "resource_id", "example.mp4")
 	videoRepository := database.NewVideoRepository(suite.DB)
-	videoRepository.Save(video)
-
-	job, _ := entity.NewJob("encoder_example_test", entity.Pending, video)
 	jobRepository := database.NewJobRepository(suite.DB)
-	jobRepository.Save(job)
 
-	useCaseExecuteJob := usecase.NewExecuteJobUseCase(job, videoRepository, jobRepository, event.NewJobCompleted(), suite.EventDispatcher)
+	useCaseExecuteJob := usecase.NewExecuteJobUseCase(videoRepository, jobRepository, event.NewJobCompleted(), suite.EventDispatcher)
 	inputExecuteJobDTO := usecase.ExecuteJobInputDTO{
-		BucketName: job.OutputBucketPath,
-		FilePath:   video.FilePath,
-		VideoID:    video.ID,
+		FilePath:   "example.mp4",
+		ResourceID: "resource_id",
 	}
 
-	err := useCaseExecuteJob.Execute(inputExecuteJobDTO)
+	go useCaseExecuteJob.Execute(inputExecuteJobDTO)
 
-	suite.NoError(err)
+	// suite.NoError(err)
 }

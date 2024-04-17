@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"log"
 	"os"
 	"os/exec"
 )
@@ -36,10 +35,4 @@ func (c *FragmentVideoUseCase) Execute(input FragmentVideoInputDTO) error {
 	printOutput(output)
 
 	return nil
-}
-
-func printOutput(out []byte) {
-	if len(out) > 0 {
-		log.Printf("=====> Output: %s\n", string(out))
-	}
 }

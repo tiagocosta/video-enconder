@@ -3,11 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"sync"
 
-	"github.com/google/uuid"
-	"github.com/tiagocosta/video-enconder/internal/entity"
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
@@ -37,27 +33,21 @@ func NewVideoRequestedHandler(
 	}
 }
 
-func (h *VideoRequestedHandler) Handle(evt events.EventInterface, wg *sync.WaitGroup) {
-	defer wg.Done()
-	fmt.Printf("video requested: %v", evt.GetPayload())
+func (h *VideoRequestedHandler) Handle(evt events.EventInterface) {
+	fmt.Printf("video requested")
 	inputDTO := VideoRequestedInputDTO{}
 	json.Unmarshal(evt.GetPayload().([]byte), &inputDTO)
 
-	video, _ := entity.NewVideo(uuid.NewString(), inputDTO.ResourceID, inputDTO.FilePath)
-	h.VideoRepository.Save(video)
-
-	bucketName := os.Getenv("BUCKET_NAME")
-	job, _ := entity.NewJob(bucketName, entity.Pending, video)
-	h.JobRepository.Save(job)
-
 	jobCompleted := event.NewJobCompleted()
 
-	useCaseExecuteJob := usecase.NewExecuteJobUseCase(job, h.VideoRepository, h.JobRepository, jobCompleted, h.EventDispatcher)
+	useCaseExecuteJob := usecase.NewExecuteJobUseCase(h.VideoRepository, h.JobRepository, jobCompleted, h.EventDispatcher)
 	inputExecuteJobDTO := usecase.ExecuteJobInputDTO{
-		BucketName: job.OutputBucketPath,
-		FilePath:   video.FilePath,
-		VideoID:    video.ID,
+		FilePath:   inputDTO.FilePath,
+		ResourceID: inputDTO.ResourceID,
 	}
 
-	useCaseExecuteJob.Execute(inputExecuteJobDTO)
+	err := useCaseExecuteJob.Execute(inputExecuteJobDTO)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

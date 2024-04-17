@@ -7,7 +7,7 @@ import (
 )
 
 func OpenRabbitMQChannel() *amqp.Channel {
-	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq/")
+	conn, err := amqp.Dial("amqp://guest:guest@172.26.0.1:5672/")
 	if err != nil {
 		panic(err)
 	}
