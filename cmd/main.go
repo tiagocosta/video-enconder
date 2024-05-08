@@ -3,9 +3,8 @@ package main
 import (
 	"database/sql"
 
-	"github.com/streadway/amqp"
 	"github.com/tiagocosta/video-enconder/configs"
-	"github.com/tiagocosta/video-enconder/internal/event"
+	"github.com/tiagocosta/video-enconder/internal/event/consumer"
 	"github.com/tiagocosta/video-enconder/internal/event/handler"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
@@ -35,26 +34,32 @@ func main() {
 		RabbitMQChannel: rabbitMQChannel,
 	})
 
-	videoEncoder = &encoder.VideoEncoderGCP{}
-
-	consumeQueue(rabbitMQChannel)
-}
-
-func consumeQueue(rabbitMQChannel *amqp.Channel) {
-	msgs := make(chan amqp.Delivery)
-
-	go rabbitmq.Consume(rabbitMQChannel, msgs, "videos")
-
-	for msg := range msgs {
-		evt := event.NewVideoRequested()
-		evt.SetPayload(msg.Body)
-		handler := handler.NewVideoRequestedHandler(
-			eventDispatcher,
-			database.NewVideoRepository(db),
-			database.NewJobRepository(db),
-			videoEncoder,
-		)
-		handler.Handle(evt)
-		msg.Ack(false)
+	videoConsumer := consumer.VideoConsumer{
+		Channel:         rabbitMQChannel,
+		EventDispatcher: eventDispatcher,
+		VideoRepository: database.NewVideoRepository(db),
+		JobRepository:   database.NewJobRepository(db),
+		Encoder:         &encoder.VideoEncoderGCP{},
 	}
+
+	videoConsumer.ConsumeQueue()
 }
+
+// func consumeQueue(rabbitMQChannel *amqp.Channel) {
+// 	msgs := make(chan amqp.Delivery)
+
+// 	go rabbitmq.Consume(rabbitMQChannel, msgs, "videos")
+
+// 	for msg := range msgs {
+// 		evt := event.NewVideoRequested()
+// 		evt.SetPayload(msg.Body)
+// 		handler := handler.NewVideoRequestedHandler(
+// 			eventDispatcher,
+// 			database.NewVideoRepository(db),
+// 			database.NewJobRepository(db),
+// 			videoEncoder,
+// 		)
+// 		handler.Handle(evt)
+// 		msg.Ack(false)
+// 	}
+// }

@@ -11,8 +11,8 @@ import (
 )
 
 type ExecuteJobInputDTO struct {
-	FilePath   string
-	ResourceID string
+	ResourceID string `json:"resource_id"`
+	FilePath   string `json:"file_path"`
 }
 
 type ExecuteJobUseCase struct {

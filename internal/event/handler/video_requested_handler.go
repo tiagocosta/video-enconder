@@ -12,8 +12,8 @@ import (
 )
 
 type VideoRequestedInputDTO struct {
-	ResourceID string
-	FilePath   string
+	ResourceID string `json:"resource_id"`
+	FilePath   string `json:"file_path"`
 }
 
 type VideoRequestedHandler struct {
