@@ -10,6 +10,7 @@ import (
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
 	"github.com/tiagocosta/video-enconder/internal/framework/rabbitmq"
+	"github.com/tiagocosta/video-enconder/internal/pkg/encoder"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -17,15 +18,10 @@ import (
 var (
 	eventDispatcher *events.EventDispatcher
 	db              *sql.DB
+	videoEncoder    encoder.VideoEncoder
 )
 
 func main() {
-	// // Create a logger
-	// logger, _ := zap.NewProduction()
-
-	// // Log messages
-	// logger.Info("This is an info message", zap.String("key", "value"))
-
 	configs.LoadConfig(".")
 
 	db = database.SqlDB()
@@ -38,6 +34,8 @@ func main() {
 	eventDispatcher.Register("JobCompleted", &handler.JobCompletedHandler{
 		RabbitMQChannel: rabbitMQChannel,
 	})
+
+	videoEncoder = &encoder.VideoEncoderGCP{}
 
 	consumeQueue(rabbitMQChannel)
 }
@@ -54,6 +52,7 @@ func consumeQueue(rabbitMQChannel *amqp.Channel) {
 			eventDispatcher,
 			database.NewVideoRepository(db),
 			database.NewJobRepository(db),
+			videoEncoder,
 		)
 		handler.Handle(evt)
 		msg.Ack(false)

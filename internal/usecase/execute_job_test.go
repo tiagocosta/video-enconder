@@ -9,6 +9,7 @@ import (
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
 	"github.com/tiagocosta/video-enconder/internal/framework/events"
+	"github.com/tiagocosta/video-enconder/internal/pkg/encoder"
 	"github.com/tiagocosta/video-enconder/internal/usecase"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,6 +19,7 @@ type ExecuteJobTestSuite struct {
 	suite.Suite
 	DB              *sql.DB
 	EventDispatcher *events.EventDispatcher
+	Encoder         encoder.VideoEncoder
 }
 
 func (suite *ExecuteJobTestSuite) SetupSuite() {
@@ -43,6 +45,7 @@ func (suite *ExecuteJobTestSuite) SetupSuite() {
 		)`)
 	suite.DB = db
 	suite.EventDispatcher = events.NewEventDispatcher()
+	suite.Encoder = &encoder.VideoEncoderGCP{}
 	configs.LoadConfig("../../")
 }
 
@@ -58,7 +61,13 @@ func (suite *ExecuteJobTestSuite) TestExecuteJob() {
 	videoRepository := database.NewVideoRepository(suite.DB)
 	jobRepository := database.NewJobRepository(suite.DB)
 
-	useCaseExecuteJob := usecase.NewExecuteJobUseCase(videoRepository, jobRepository, event.NewJobCompleted(), suite.EventDispatcher)
+	useCaseExecuteJob := usecase.NewExecuteJobUseCase(
+		videoRepository,
+		jobRepository,
+		event.NewJobCompleted(),
+		suite.EventDispatcher,
+		suite.Encoder,
+	)
 	inputExecuteJobDTO := usecase.ExecuteJobInputDTO{
 		FilePath:   "example.mp4",
 		ResourceID: "resource_id",
