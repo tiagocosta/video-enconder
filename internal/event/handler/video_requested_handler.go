@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/framework/database"
@@ -38,7 +37,6 @@ func NewVideoRequestedHandler(
 }
 
 func (h *VideoRequestedHandler) Handle(evt events.EventInterface) error {
-	fmt.Printf("video requested")
 	inputDTO := VideoRequestedInputDTO{}
 	json.Unmarshal(evt.GetPayload().([]byte), &inputDTO)
 

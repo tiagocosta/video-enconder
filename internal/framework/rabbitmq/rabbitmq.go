@@ -73,19 +73,6 @@ func failOnError(err error, message string) {
 }
 
 func Consume(rabbitMQChannel *amqp.Channel, out chan<- amqp.Delivery, queue string) error {
-	// rabbitMQQueue, err := rabbitMQChannel.QueueDeclare(
-	// 	queue, // name
-	// 	true,  // durable
-	// 	false, // delete when usused
-	// 	false, // exclusive
-	// 	false, // no-wait
-	// 	nil,   // arguments
-	// )
-
-	// if err != nil {
-	// 	log.Fatalf("%s: %s", "failed to declare queue", err)
-	// }
-
 	msgs, err := rabbitMQChannel.Consume(
 		queue,
 		"go-consumer",

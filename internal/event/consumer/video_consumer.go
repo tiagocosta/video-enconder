@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"log"
+
 	"github.com/streadway/amqp"
 	"github.com/tiagocosta/video-enconder/internal/event"
 	"github.com/tiagocosta/video-enconder/internal/event/handler"
@@ -38,6 +40,7 @@ func (consumer *VideoConsumer) ConsumeQueue() {
 	go rabbitmq.Consume(consumer.Channel, msgs, "videos")
 
 	for msg := range msgs {
+		log.Println("video requested")
 		evt := event.NewVideoRequested()
 		evt.SetPayload(msg.Body)
 		handler := handler.NewVideoRequestedHandler(
@@ -49,8 +52,11 @@ func (consumer *VideoConsumer) ConsumeQueue() {
 		err := handler.Handle(evt)
 		if err != nil {
 			msg.Nack(false, false)
+			log.Println("encoding failed")
 		} else {
 			msg.Ack(false)
+			log.Println("video encoded")
 		}
+
 	}
 }
