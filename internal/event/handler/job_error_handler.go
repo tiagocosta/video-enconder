@@ -9,21 +9,21 @@ import (
 	"github.com/tiagocosta/video-enconder/internal/framework/rabbitmq"
 )
 
-type JobCompletedHandler struct {
+type JobErrorHandler struct {
 	RabbitMQChannel *amqp.Channel
 }
 
-func NewJobCompletedHandler(rabbitMQChannel *amqp.Channel) *JobCompletedHandler {
-	return &JobCompletedHandler{
+func NewJobErrorHandler(rabbitMQChannel *amqp.Channel) *JobErrorHandler {
+	return &JobErrorHandler{
 		RabbitMQChannel: rabbitMQChannel,
 	}
 }
 
-func (h *JobCompletedHandler) Handle(event events.EventInterface, wg *sync.WaitGroup) error {
+func (h *JobErrorHandler) Handle(event events.EventInterface, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	jsonOutput, _ := json.Marshal(event.GetPayload())
-	rabbitmq.Publish(h.RabbitMQChannel, jsonOutput, "amq.direct", "jobs")
+	rabbitmq.Publish(h.RabbitMQChannel, jsonOutput, "dlx", "jobs")
 
 	return nil
 }

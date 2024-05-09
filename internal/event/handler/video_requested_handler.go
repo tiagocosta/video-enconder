@@ -37,17 +37,19 @@ func NewVideoRequestedHandler(
 	}
 }
 
-func (h *VideoRequestedHandler) Handle(evt events.EventInterface) {
+func (h *VideoRequestedHandler) Handle(evt events.EventInterface) error {
 	fmt.Printf("video requested")
 	inputDTO := VideoRequestedInputDTO{}
 	json.Unmarshal(evt.GetPayload().([]byte), &inputDTO)
 
 	jobCompleted := event.NewJobCompleted()
+	jobError := event.NewJobError()
 
 	useCaseExecuteJob := usecase.NewExecuteJobUseCase(
 		h.VideoRepository,
 		h.JobRepository,
 		jobCompleted,
+		jobError,
 		h.EventDispatcher,
 		h.Encoder,
 	)
@@ -58,6 +60,8 @@ func (h *VideoRequestedHandler) Handle(evt events.EventInterface) {
 
 	err := useCaseExecuteJob.Execute(inputExecuteJobDTO)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
+
+	return nil
 }

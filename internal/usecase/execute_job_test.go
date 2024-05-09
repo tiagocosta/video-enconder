@@ -65,6 +65,7 @@ func (suite *ExecuteJobTestSuite) TestExecuteJob() {
 		videoRepository,
 		jobRepository,
 		event.NewJobCompleted(),
+		event.NewJobError(),
 		suite.EventDispatcher,
 		suite.Encoder,
 	)

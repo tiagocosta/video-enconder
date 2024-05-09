@@ -15,10 +15,15 @@ type ExecuteJobInputDTO struct {
 	FilePath   string `json:"file_path"`
 }
 
+type ExecuteJobOutputDTO struct {
+	Result string `json:"result"`
+}
+
 type ExecuteJobUseCase struct {
 	VideoRepository *database.VideoRepository
 	JobRepository   *database.JobRepository
 	JobCompleted    *event.JobCompleted
+	JobError        *event.JobError
 	EventDispatcher *events.EventDispatcher
 	Encoder         encoder.VideoEncoder
 }
@@ -27,6 +32,7 @@ func NewExecuteJobUseCase(
 	videoRepository *database.VideoRepository,
 	jobRepository *database.JobRepository,
 	jobCompleted *event.JobCompleted,
+	jobError *event.JobError,
 	eventDispatcher *events.EventDispatcher,
 	encoder encoder.VideoEncoder,
 ) *ExecuteJobUseCase {
@@ -34,6 +40,7 @@ func NewExecuteJobUseCase(
 		VideoRepository: videoRepository,
 		JobRepository:   jobRepository,
 		JobCompleted:    jobCompleted,
+		JobError:        jobError,
 		EventDispatcher: eventDispatcher,
 		Encoder:         encoder,
 	}
@@ -103,6 +110,13 @@ func (uc *ExecuteJobUseCase) Execute(input ExecuteJobInputDTO) error {
 		return uc.failJob(job, err)
 	}
 
+	output := ExecuteJobOutputDTO{
+		Result: "video encoded",
+	}
+
+	uc.JobCompleted.SetPayload(output)
+	uc.EventDispatcher.Dispatch(uc.JobCompleted)
+
 	return nil
 }
 
@@ -123,6 +137,13 @@ func (uc *ExecuteJobUseCase) failJob(job *entity.Job, error error) error {
 	if err != nil {
 		return err
 	}
+
+	output := ExecuteJobOutputDTO{
+		Result: error.Error(),
+	}
+
+	uc.JobError.SetPayload(output)
+	uc.EventDispatcher.Dispatch(uc.JobError)
 
 	return error
 }

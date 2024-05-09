@@ -18,6 +18,20 @@ type VideoConsumer struct {
 	Encoder         encoder.VideoEncoder
 }
 
+func (consumer *VideoConsumer) Initialize() {
+	rabbitmq.DeclareExchange(consumer.Channel, "dlx", "direct", nil)
+
+	queueArgs := make(amqp.Table)
+	queueArgs["x-dead-letter-exchange"] = "dlx"
+
+	rabbitmq.DeclareQueue(consumer.Channel, "videos", queueArgs)
+	rabbitmq.DeclareQueue(consumer.Channel, "videos-failed", nil)
+	rabbitmq.DeclareQueue(consumer.Channel, "videos-result", nil)
+
+	rabbitmq.BindQueue(consumer.Channel, "dlx", "videos-failed", "jobs")
+	rabbitmq.BindQueue(consumer.Channel, "amq.direct", "videos-result", "jobs")
+}
+
 func (consumer *VideoConsumer) ConsumeQueue() {
 	msgs := make(chan amqp.Delivery)
 
@@ -32,7 +46,11 @@ func (consumer *VideoConsumer) ConsumeQueue() {
 			consumer.JobRepository,
 			consumer.Encoder,
 		)
-		handler.Handle(evt)
-		msg.Ack(false)
+		err := handler.Handle(evt)
+		if err != nil {
+			msg.Nack(false, false)
+		} else {
+			msg.Ack(false)
+		}
 	}
 }

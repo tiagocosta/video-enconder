@@ -33,6 +33,9 @@ func main() {
 	eventDispatcher.Register("JobCompleted", &handler.JobCompletedHandler{
 		RabbitMQChannel: rabbitMQChannel,
 	})
+	eventDispatcher.Register("JobError", &handler.JobErrorHandler{
+		RabbitMQChannel: rabbitMQChannel,
+	})
 
 	videoConsumer := consumer.VideoConsumer{
 		Channel:         rabbitMQChannel,
@@ -41,6 +44,8 @@ func main() {
 		JobRepository:   database.NewJobRepository(db),
 		Encoder:         &encoder.VideoEncoderGCP{},
 	}
+
+	videoConsumer.Initialize()
 
 	videoConsumer.ConsumeQueue()
 }
